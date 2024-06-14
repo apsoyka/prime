@@ -7,6 +7,8 @@ use config::{setup_logging, Arguments};
 use indicatif::{MultiProgress, ProgressBar};
 use log::{error, info};
 use num::{range_inclusive, BigInt, BigRational, FromPrimitive};
+use num_rational::Ratio;
+use once_cell::sync::Lazy;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
 type UnitResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
@@ -26,14 +28,46 @@ impl<T> First<T> for Vec<T> {
     }
 }
 
+struct NumericConstants<'a> {
+    zero: &'a Ratio<BigInt>,
+    one: &'a Ratio<BigInt>,
+    two: &'a Ratio<BigInt>,
+    three: &'a Ratio<BigInt>,
+    five: &'a Ratio<BigInt>,
+    six: &'a Ratio<BigInt>,
+    seven: &'a Ratio<BigInt>,
+}
+
+static CONSTANTS: Lazy<NumericConstants> = Lazy::new(|| {
+    static ZERO: Lazy<Ratio<BigInt>> = Lazy::new(|| BigRational::from_usize(0).unwrap());
+    static ONE: Lazy<Ratio<BigInt>> = Lazy::new(|| BigRational::from_usize(1).unwrap());
+    static TWO: Lazy<Ratio<BigInt>> = Lazy::new(|| BigRational::from_usize(2).unwrap());
+    static THREE: Lazy<Ratio<BigInt>> = Lazy::new(|| BigRational::from_usize(3).unwrap());
+    static FIVE: Lazy<Ratio<BigInt>> = Lazy::new(|| BigRational::from_usize(5).unwrap());
+    static SIX: Lazy<Ratio<BigInt>> = Lazy::new(|| BigRational::from_usize(6).unwrap());
+    static SEVEN: Lazy<Ratio<BigInt>> = Lazy::new(|| BigRational::from_usize(7).unwrap());
+
+    NumericConstants {
+        zero: &ZERO,
+        one: &ONE,
+        two: &TWO,
+        three: &THREE,
+        five: &FIVE,
+        six: &SIX,
+        seven: &SEVEN
+    }
+});
+
 fn prime(number: &BigInt, multi_progress: Option<MultiProgress>) -> bool {
-    let zero = &BigRational::from_usize(0).unwrap();
-    let one = &BigRational::from_usize(1).unwrap();
-    let two = &BigRational::from_usize(2).unwrap();
-    let three = &BigRational::from_usize(3).unwrap();
-    let five = &BigRational::from_usize(5).unwrap();
-    let six = &BigRational::from_usize(6).unwrap();
-    let seven = &BigRational::from_usize(7).unwrap();
+    let NumericConstants {
+        zero,
+        one,
+        two,
+        three,
+        five,
+        six,
+        seven
+    } = *CONSTANTS;
 
     let ratio = &BigRational::from_integer(number.clone());
 
