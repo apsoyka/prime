@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 
 use indicatif::{MultiProgress, ProgressBar};
-use num::{range_inclusive, BigInt, BigRational, FromPrimitive};
+use num::{range_inclusive, BigInt, BigRational, FromPrimitive, ToPrimitive};
 use num_rational::Ratio;
 use once_cell::sync::Lazy;
 use rayon::iter::{ParallelBridge, ParallelIterator};
@@ -18,18 +18,6 @@ trait First<T> {
 impl<T> First<T> for Vec<T> {
     fn first(&self) -> Option<&T> {
         self.get(0)
-    }
-}
-
-trait ToPrimitive {
-    fn to_u64(&self) -> Option<u64>;
-}
-
-impl ToPrimitive for BigInt {
-    fn to_u64(&self) -> Option<u64> {
-        let (_, digits) = self.to_u64_digits();
-
-        digits.first().copied()
     }
 }
 
