@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
 
 use indicatif::{MultiProgress, ProgressBar};
 use num::{range_inclusive, BigInt, BigRational, FromPrimitive};
@@ -18,6 +18,18 @@ trait First<T> {
 impl<T> First<T> for Vec<T> {
     fn first(&self) -> Option<&T> {
         self.get(0)
+    }
+}
+
+trait ToPrimitive {
+    fn to_u64(&self) -> Option<u64>;
+}
+
+impl ToPrimitive for BigInt {
+    fn to_u64(&self) -> Option<u64> {
+        let (_, digits) = self.to_u64_digits();
+
+        digits.first().copied()
     }
 }
 
@@ -51,7 +63,7 @@ static CONSTANTS: Lazy<NumericConstants> = Lazy::new(|| {
     }
 });
 
-pub fn prime(number: &BigInt, multi_progress: Option<MultiProgress>) -> bool {
+pub fn prime(number: &BigInt, multi_progress: Option<&MultiProgress>) -> bool {
     let NumericConstants {
         zero,
         one,
@@ -75,21 +87,17 @@ pub fn prime(number: &BigInt, multi_progress: Option<MultiProgress>) -> bool {
     if ((ratio - one) / six).is_integer() || ((ratio + one) / six).is_integer() {
         let start = BigInt::from(1);
         let max = BigInt::from_u64(u64::MAX).unwrap();
-        let min = number.min(&max);
-        let (_, binding) = min.to_u64_digits();
-        let chunk_count = binding.first().unwrap();
-        let chunk_size = (ratio / max).ceil().to_integer();
-        let (_, binding) = chunk_size.to_u64_digits();
-        let chunk_size = binding.first().unwrap();
+        let chunk_count = number.min(&max).to_u64().unwrap();
+        let chunk_size = (ratio / max).ceil().to_integer().to_u64().unwrap();
 
         let progress_bar = multi_progress.clone()
-            .and_then(|value| Some(value.add(ProgressBar::new(*chunk_count))));
-        let chunk_index = AtomicU64::new(0);
+            .and_then(|value| Some(value.add(ProgressBar::new(chunk_count))));
         let range = range_inclusive(start, number.clone());
+        let chunk_index = Mutex::new(BigInt::from(0));
 
         let result = range.par_bridge().try_for_each(|index| {
-            let index = &index;
-            let factorsix = &(six * index);
+            let binding = &index;
+            let factorsix = &(six * binding);
             let fivebase = &(ratio / (five + factorsix));
             let sevenbase = &(ratio / (seven + factorsix));
 
@@ -101,12 +109,12 @@ pub fn prime(number: &BigInt, multi_progress: Option<MultiProgress>) -> bool {
                 return Err(FactoringResult::NoFactors);
             }
 
-            let (_, binding) = (index / chunk_size).to_u64_digits();
-            let new_index = binding.first().unwrap();
+            let new_index = (BigRational::from_integer(index) / BigRational::from_u64(chunk_size).unwrap()).floor().to_integer();
+            let mut guard = chunk_index.lock().unwrap();
 
-            if progress_bar.is_some() && new_index > &chunk_index.load(Ordering::Relaxed) {
-                progress_bar.as_ref().unwrap().inc(*chunk_size);
-                chunk_index.store(*new_index, Ordering::Relaxed);
+            if progress_bar.is_some() && new_index > *guard {
+                progress_bar.as_ref().unwrap().inc(chunk_size);
+                *guard = new_index;
             }
 
             Ok(())

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Args, Parser};
 use indicatif::MultiProgress;
 use indicatif_log_bridge::LogWrapper;
@@ -6,13 +8,13 @@ use log::LevelFilter;
 type MultiProgressResult = Result<MultiProgress, Box<dyn std::error::Error + Send + Sync>>;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None, arg_required_else_help = true, propagate_version = true)]
+#[command(author, version, about, long_about = None, arg_required_else_help = false, propagate_version = true)]
 pub struct Arguments {
     #[command(flatten)]
     pub verbosity: Verbosity,
 
-    #[arg(help = "A positive integer in the set of the natural numbers")]
-    pub number: String,
+    #[arg(help = "A path to a file on the filesystem containing numbers to test")]
+    pub input_file: Option<PathBuf>,
 }
 
 #[derive(Args)]
