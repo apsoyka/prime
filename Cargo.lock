@@ -445,9 +445,9 @@ checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
 
 [[package]]
 name = "scope-functions"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6331f38efb60bfa15fe8e2420b6cecf597bdad1c118a63c3c696421699278078"
+checksum = "1721b0be11b012687fa8105dac31cf51d76a52dec5f95ff9907639e8527ed29e"
 
 [[package]]
 name = "strsim"

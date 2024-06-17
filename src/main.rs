@@ -60,7 +60,7 @@ fn main() -> UnitResult {
         let number = number?;
 
         let formatted = if number > max {
-            number.to_string().apply_mut(|value| value.truncate(10)) + "..."
+            number.to_string().apply_mut(|value| value.truncate(10)).to_owned() + "..."
         }
         else {
             number.to_string()
