@@ -13,6 +13,9 @@ pub struct Arguments {
     #[command(flatten)]
     pub verbosity: Verbosity,
 
+    #[arg(short = 'n', long = "no-truncate", help = "Do not truncate numbers with more than 10 digits")]
+    pub no_truncate: bool,
+
     #[arg(help = "A path to a file on the filesystem containing numbers to test")]
     pub input_file: Option<PathBuf>,
 }

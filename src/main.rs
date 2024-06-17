@@ -52,19 +52,15 @@ fn main() -> UnitResult {
         .map(|string| string.parse::<BigInt>())
         .collect::<Vec<_>>();
     let count = numbers.len() as u64;
-    let max = BigInt::from_usize(9999999999).unwrap();
+    let max = BigInt::from_usize(10000000000).unwrap();
 
     let progress_bar = multi_progress.add(ProgressBar::new(count));
 
     for number in numbers {
         let number = number?;
 
-        let formatted = if number > max {
-            number.to_string().apply_mut(|value| value.truncate(10)).to_owned() + "..."
-        }
-        else {
-            number.to_string()
-        };
+        let formatted = if arguments.no_truncate || number < max { number.to_string() }
+        else { number.to_string().apply_mut(|value| value.truncate(10)).to_owned() + "..." };
 
         match prime(&number, Some(&multi_progress)) {
             true => info!("{formatted} -> PRIME"),

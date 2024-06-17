@@ -11,16 +11,6 @@ enum FactoringResult {
     NoFactors,
 }
 
-trait First<T> {
-    fn first(&self) -> Option<&T>;
-}
-
-impl<T> First<T> for Vec<T> {
-    fn first(&self) -> Option<&T> {
-        self.get(0)
-    }
-}
-
 struct NumericConstants<'a> {
     zero: &'a Ratio<BigInt>,
     one: &'a Ratio<BigInt>,
