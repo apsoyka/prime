@@ -66,7 +66,7 @@ pub fn prime(number: &BigInt, multi_progress: Option<&MultiProgress>) -> bool {
         let start = BigInt::from(1);
         let max = BigInt::from_u64(u64::MAX).unwrap();
         let chunk_count = number.min(&max).to_u64().unwrap();
-        let chunk_size = (ratio / max).ceil().to_integer().to_u64().unwrap();
+        let chunk_size = &(ratio / max).ceil();
 
         let progress_bar = multi_progress.clone()
             .and_then(|value| Some(value.add(ProgressBar::new(chunk_count))));
@@ -75,6 +75,7 @@ pub fn prime(number: &BigInt, multi_progress: Option<&MultiProgress>) -> bool {
 
         let result = range.par_bridge().try_for_each(|index| {
             let binding = &index;
+
             let factorsix = &(six * binding);
             let fivebase = &(ratio / (five + factorsix));
             let sevenbase = &(ratio / (seven + factorsix));
@@ -87,12 +88,13 @@ pub fn prime(number: &BigInt, multi_progress: Option<&MultiProgress>) -> bool {
                 return Err(FactoringResult::NoFactors);
             }
 
-            let new_index = (BigRational::from_integer(index) / BigRational::from_u64(chunk_size).unwrap()).floor().to_integer();
+            let new_index = (&BigRational::from_integer(index) / chunk_size).floor().to_integer();
             let mut guard = chunk_index.lock().unwrap();
 
-            if progress_bar.is_some() && new_index > *guard {
-                progress_bar.as_ref().unwrap().inc(chunk_size);
+            if new_index > *guard {
                 *guard = new_index;
+
+                if progress_bar.is_some() { progress_bar.as_ref().unwrap().inc(1); }
             }
 
             Ok(())
